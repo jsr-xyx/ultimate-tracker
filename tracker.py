@@ -12,29 +12,24 @@ STAT_COLUMNS = [
     "Defensive Blocks", "Turnovers", "Plus/Minus"
 ]
 
-
-# ------------------------------
-# Data Load / Save
-# ------------------------------
+# Load existing data
 def load_stats():
     if os.path.exists(DATA_FILE):
         return pd.read_csv(DATA_FILE)
     return pd.DataFrame(columns=STAT_COLUMNS)
 
+# Save updated data
 def save_stats(df):
     df.to_csv(DATA_FILE, index=False)
 
-
-# ------------------------------
-# Log Form
-# ------------------------------
+# Logging form
 def log_stat_form(df):
     with st.form("log_form"):
-        st.subheader("📋 Log New Game")
+        st.subheader("Log Game Stats")
 
         col1, col2 = st.columns(2)
-        team_score = col1.number_input("Team Score", min_value=0, value=0)
-        opponent_score = col2.number_input("Opponent Score", min_value=0, value=0)
+        team_score = col1.number_input("Team Score", 0)
+        opponent_score = col2.number_input("Opponent Score", 0)
 
         col3, col4 = st.columns(2)
         player = col3.text_input("Player Name")
@@ -56,7 +51,7 @@ def log_stat_form(df):
         pulls = col11.number_input("Total Pulls", 0)
         ob_pulls = col12.number_input("Out-of-Bounds Pulls", 0)
 
-        submitted = st.form_submit_button("➕ Add Stats")
+        submitted = st.form_submit_button("+ Add Stat")
 
         if submitted and player and game:
             turnovers = drops + throwaways + stalls
@@ -84,16 +79,13 @@ def log_stat_form(df):
 
             df = pd.concat([df, new_row], ignore_index=True)
             save_stats(df)
-            st.success("Game logged!")
+            st.success("Game stats added!")
 
     return df
 
-
-# ------------------------------
-# Filters + Table
-# ------------------------------
+# Filtering
 def show_filtered_table(df):
-    st.subheader("🔍 Filter Stats")
+    st.subheader("Filter Stats")
 
     players = ["All"] + sorted(df["Player"].dropna().unique())
     games = ["All"] + sorted(df["Game"].dropna().unique())
@@ -108,17 +100,14 @@ def show_filtered_table(df):
     if selected_game != "All":
         filtered = filtered[filtered["Game"] == selected_game]
 
-    st.subheader("📄 Game Log")
+    st.subheader("Game Log")
     st.dataframe(filtered)
 
     return filtered
 
-
-# ------------------------------
 # Chart
-# ------------------------------
 def show_trend_chart(filtered_df):
-    st.subheader("📈 Stat Trend")
+    st.subheader("Stat Trend")
 
     stat = st.selectbox(
         "Choose stat to chart",
@@ -136,30 +125,22 @@ def show_trend_chart(filtered_df):
         ).properties(title=f"{stat} Over Games")
         st.altair_chart(chart, use_container_width=True)
 
-
-# ------------------------------
-# Export + Reset
-# ------------------------------
+# Export + Delete
 def export_and_reset(df):
     csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button("📥 Download CSV", csv, "filtered_stats.csv", "text/csv")
+    st.download_button("Download CSV", csv, "filtered_stats.csv", "text/csv")
 
-    st.subheader("⚠️ Reset All Stats")
-    with st.expander("Danger Zone", expanded=False):
-        st.warning("This will permanently delete all data.")
-        if st.button("🗑️ Delete All"):
-            df = df.iloc[0:0]
-            save_stats(df)
-            st.success("All stats deleted.")
-            st.experimental_rerun()
+    st.subheader("Delete All Stats")
+    if st.button("Delete All"):
+        df = df.iloc[0:0]
+        save_stats(df)
+        st.success("All stats deleted.")
+        st.rerun()
 
-
-# ------------------------------
 # Main App
-# ------------------------------
 def show():
-    st.title("🥏 Ultimate Stats Tracker")
-    st.caption("Log Ultimate Frisbee game stats, view performance trends, and export your data.")
+    st.title("Ultimate Stats Tracker")
+    st.caption("Track, filter, and visualize your Ultimate game stats.")
 
     stats_df = load_stats()
     stats_df = log_stat_form(stats_df)
@@ -172,7 +153,5 @@ def show():
     show_trend_chart(filtered_df)
     export_and_reset(filtered_df)
 
-
-# Run app directly
 if __name__ == "__main__":
     show()
