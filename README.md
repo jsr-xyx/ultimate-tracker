@@ -16,17 +16,13 @@ It logs game-by-game stats and score, calculates plus/minus and pull success, an
 - Export data to CSV
 - Save/load locally (`ultimate_stats.csv`)
 
----
 
-## 📸 Screenshot
-
-🖼️ *Screenshot coming soon! Will show tracker UI in action.*
 
 ---
 
 ## Live Demo
 
-[Launch the tracker on Streamlit Cloud](https://yunxuan-portfolio.streamlit.app)
+[Launch the tracker on Streamlit Cloud](https://ultimate-tracker.streamlit.app)
 
 ---
 
