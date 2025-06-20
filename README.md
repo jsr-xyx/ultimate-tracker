@@ -1,4 +1,4 @@
-# 🥏 Ultimate Stats Tracker
+# Ultimate Stats Tracker
 
 A personal stats tracking app I built to analyze performance in Ultimate Frisbee games.
 
@@ -23,13 +23,3 @@ It logs game-by-game stats and score, calculates plus/minus and pull success, an
 ## Live Demo
 
 [Launch the tracker on Streamlit Cloud](https://ultimate-tracker.streamlit.app)
-
----
-
-## 🛠 How to Run Locally
-
-1. **Clone this repo**
-
-```bash
-git clone https://github.com/jsr-xyx/ultimate-tracker.git
-cd ultimate-tracker
