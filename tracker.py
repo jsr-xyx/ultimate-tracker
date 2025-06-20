@@ -19,13 +19,12 @@ def save_data(df):
 
 def show():
     st.title("🥏 Ultimate Stats Tracker")
-    st.write("Track your performance game-by-game: stats, score, and trends.")
+    st.write("Track your game-by-game Ultimate Frisbee stats — with trends, filters, and CSV export.")
 
     df = load_data()
 
-    # --- Stat Logging Form ---
     with st.form("log_form"):
-        st.subheader("Log a Stat")
+        st.subheader("📋 Log a Stat")
 
         col0a, col0b = st.columns(2)
         my_score = col0a.number_input("Your Team Score", min_value=0, value=0)
@@ -51,7 +50,7 @@ def show():
         total_pulls = col9.number_input("Total Pulls", min_value=0, value=0)
         ob_pulls = col10.number_input("OB Pulls", min_value=0, value=0)
 
-        submit = st.form_submit_button("Add Stat")
+        submit = st.form_submit_button("✅ Add Stat")
 
         if submit and player and game:
             turnovers = drops + throwaways + stalls
@@ -79,13 +78,13 @@ def show():
 
             df = pd.concat([df, new_entry], ignore_index=True)
             save_data(df)
-            st.success("✅ Stat added successfully!")
+            st.success("Stat added successfully!")
 
     if df.empty:
         st.info("No stats logged yet.")
         return
 
-    # --- Filters ---
+    # Filters
     st.subheader("🔍 Filter Stats")
     players = ["All"] + sorted(df["Player"].dropna().unique())
     games = ["All"] + sorted(df["Game"].dropna().unique())
@@ -100,16 +99,15 @@ def show():
     if selected_game != "All":
         filtered_df = filtered_df[filtered_df["Game"] == selected_game]
 
-    # --- Table View ---
-    st.subheader("📋 Game Log")
+    st.subheader("📄 Game Log")
     st.dataframe(filtered_df)
 
-    # --- Chart ---
+    # Chart
     st.subheader("📈 Stat Trend")
     stat_to_chart = st.selectbox(
         "Select Stat to Chart",
-        ["Goals", "Assists", "Drops", "Throwaways", "Stall Downs", "OB Pulls", "Total Pulls",
-         "Pull Success %", "Turnovers", "Ds", "+/-"]
+        ["Goals", "Assists", "Drops", "Throwaways", "Stall Downs", "OB Pulls",
+         "Total Pulls", "Pull Success %", "Turnovers", "Ds", "+/-"]
     )
 
     if not filtered_df.empty and stat_to_chart in filtered_df.columns:
@@ -121,7 +119,10 @@ def show():
         ).properties(title=f"{stat_to_chart} Over Games")
         st.altair_chart(chart, use_container_width=True)
 
-    # --- CSV Export ---
+    # CSV Export
     csv = filtered_df.to_csv(index=False).encode("utf-8")
     st.download_button("📥 Download Filtered CSV", csv, "ultimate_stats_filtered.csv", "text/csv")
 
+# 👇 This runs the app when deployed directly on Streamlit Cloud
+if __name__ == "__main__":
+    show()
