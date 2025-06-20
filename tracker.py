@@ -3,126 +3,176 @@ import pandas as pd
 import altair as alt
 import os
 
-FILE_PATH = "ultimate_stats.csv"
+DATA_FILE = "ultimate_stats.csv"
 
-def load_data():
-    if os.path.exists(FILE_PATH):
-        return pd.read_csv(FILE_PATH)
-    return pd.DataFrame(columns=[
-        "Player", "Game", "Your Score", "Opponent Score", "Goals", "Assists",
-        "Drops", "Throwaways", "Stall Downs", "Total Pulls", "OB Pulls", "Pull Success %",
-        "Ds", "Turnovers", "+/-"
-    ])
+STAT_COLUMNS = [
+    "Player", "Game", "Team Score", "Opponent Score",
+    "Goals", "Assists", "Drops", "Throwaways", "Stall Downs",
+    "Total Pulls", "Out-of-Bounds Pulls", "Pull Success %",
+    "Defensive Blocks", "Turnovers", "Plus/Minus"
+]
 
-def save_data(df):
-    df.to_csv(FILE_PATH, index=False)
 
-def show():
-    st.title("🥏 Ultimate Stats Tracker")
-    st.write("Track your game-by-game Ultimate Frisbee stats — with trends, filters, and CSV export.")
+# ------------------------------
+# Data Load / Save
+# ------------------------------
+def load_stats():
+    if os.path.exists(DATA_FILE):
+        return pd.read_csv(DATA_FILE)
+    return pd.DataFrame(columns=STAT_COLUMNS)
 
-    df = load_data()
+def save_stats(df):
+    df.to_csv(DATA_FILE, index=False)
 
+
+# ------------------------------
+# Log Form
+# ------------------------------
+def log_stat_form(df):
     with st.form("log_form"):
-        st.subheader("📋 Log a Stat")
-
-        col0a, col0b = st.columns(2)
-        my_score = col0a.number_input("Your Team Score", min_value=0, value=0)
-        opp_score = col0b.number_input("Opponent Score", min_value=0, value=0)
+        st.subheader("📋 Log New Game")
 
         col1, col2 = st.columns(2)
-        player = col1.text_input("Player Name")
-        game = col2.text_input("Game / Date")
+        team_score = col1.number_input("Team Score", min_value=0, value=0)
+        opponent_score = col2.number_input("Opponent Score", min_value=0, value=0)
 
         col3, col4 = st.columns(2)
-        goals = col3.number_input("Goals", min_value=0, value=0)
-        assists = col4.number_input("Assists", min_value=0, value=0)
+        player = col3.text_input("Player Name")
+        game = col4.text_input("Game / Date")
 
         col5, col6 = st.columns(2)
-        drops = col5.number_input("Drops", min_value=0, value=0)
-        throwaways = col6.number_input("Throwaways", min_value=0, value=0)
+        goals = col5.number_input("Goals", 0)
+        assists = col6.number_input("Assists", 0)
 
         col7, col8 = st.columns(2)
-        stalls = col7.number_input("Stall Downs", min_value=0, value=0)
-        ds = col8.number_input("Ds (Defensive Blocks)", min_value=0, value=0)
+        drops = col7.number_input("Drops", 0)
+        throwaways = col8.number_input("Throwaways", 0)
 
         col9, col10 = st.columns(2)
-        total_pulls = col9.number_input("Total Pulls", min_value=0, value=0)
-        ob_pulls = col10.number_input("OB Pulls", min_value=0, value=0)
+        stalls = col9.number_input("Stall Downs", 0)
+        blocks = col10.number_input("Defensive Blocks", 0)
 
-        submit = st.form_submit_button("✅ Add Stat")
+        col11, col12 = st.columns(2)
+        pulls = col11.number_input("Total Pulls", 0)
+        ob_pulls = col12.number_input("Out-of-Bounds Pulls", 0)
 
-        if submit and player and game:
+        submitted = st.form_submit_button("➕ Add Stats")
+
+        if submitted and player and game:
             turnovers = drops + throwaways + stalls
-            plus_minus = (goals + assists + ds) - turnovers
-            in_bounds_pulls = max(total_pulls - ob_pulls, 0)
-            pull_success = (in_bounds_pulls / total_pulls * 100) if total_pulls > 0 else None
+            plus_minus = (goals + assists + blocks) - turnovers
+            in_bounds = max(pulls - ob_pulls, 0)
+            pull_success = (in_bounds / pulls * 100) if pulls > 0 else None
 
-            new_entry = pd.DataFrame([{
+            new_row = pd.DataFrame([{
                 "Player": player,
                 "Game": game,
-                "Your Score": my_score,
-                "Opponent Score": opp_score,
+                "Team Score": team_score,
+                "Opponent Score": opponent_score,
                 "Goals": goals,
                 "Assists": assists,
                 "Drops": drops,
                 "Throwaways": throwaways,
                 "Stall Downs": stalls,
-                "Total Pulls": total_pulls,
-                "OB Pulls": ob_pulls,
+                "Total Pulls": pulls,
+                "Out-of-Bounds Pulls": ob_pulls,
                 "Pull Success %": pull_success,
-                "Ds": ds,
+                "Defensive Blocks": blocks,
                 "Turnovers": turnovers,
-                "+/-": plus_minus
+                "Plus/Minus": plus_minus
             }])
 
-            df = pd.concat([df, new_entry], ignore_index=True)
-            save_data(df)
-            st.success("Stat added successfully!")
+            df = pd.concat([df, new_row], ignore_index=True)
+            save_stats(df)
+            st.success("Game logged!")
 
-    if df.empty:
-        st.info("No stats logged yet.")
-        return
+    return df
 
-    # Filters
+
+# ------------------------------
+# Filters + Table
+# ------------------------------
+def show_filtered_table(df):
     st.subheader("🔍 Filter Stats")
+
     players = ["All"] + sorted(df["Player"].dropna().unique())
     games = ["All"] + sorted(df["Game"].dropna().unique())
 
     col1, col2 = st.columns(2)
-    selected_player = col1.selectbox("Filter by Player", players)
-    selected_game = col2.selectbox("Filter by Game", games)
+    selected_player = col1.selectbox("Player", players)
+    selected_game = col2.selectbox("Game", games)
 
-    filtered_df = df.copy()
+    filtered = df.copy()
     if selected_player != "All":
-        filtered_df = filtered_df[filtered_df["Player"] == selected_player]
+        filtered = filtered[filtered["Player"] == selected_player]
     if selected_game != "All":
-        filtered_df = filtered_df[filtered_df["Game"] == selected_game]
+        filtered = filtered[filtered["Game"] == selected_game]
 
     st.subheader("📄 Game Log")
-    st.dataframe(filtered_df)
+    st.dataframe(filtered)
 
-    # Chart
+    return filtered
+
+
+# ------------------------------
+# Chart
+# ------------------------------
+def show_trend_chart(filtered_df):
     st.subheader("📈 Stat Trend")
-    stat_to_chart = st.selectbox(
-        "Select Stat to Chart",
-        ["Goals", "Assists", "Drops", "Throwaways", "Stall Downs", "OB Pulls",
-         "Total Pulls", "Pull Success %", "Turnovers", "Ds", "+/-"]
+
+    stat = st.selectbox(
+        "Choose stat to chart",
+        ["Goals", "Assists", "Drops", "Throwaways", "Stall Downs",
+         "Out-of-Bounds Pulls", "Total Pulls", "Pull Success %",
+         "Turnovers", "Defensive Blocks", "Plus/Minus"]
     )
 
-    if not filtered_df.empty and stat_to_chart in filtered_df.columns:
+    if not filtered_df.empty:
         chart = alt.Chart(filtered_df).mark_line(point=True).encode(
             x="Game:N",
-            y=stat_to_chart,
+            y=stat,
             color="Player:N",
-            tooltip=["Player", "Game", stat_to_chart]
-        ).properties(title=f"{stat_to_chart} Over Games")
+            tooltip=["Player", "Game", stat]
+        ).properties(title=f"{stat} Over Games")
         st.altair_chart(chart, use_container_width=True)
 
-    # CSV Export
-    csv = filtered_df.to_csv(index=False).encode("utf-8")
-    st.download_button("📥 Download Filtered CSV", csv, "ultimate_stats_filtered.csv", "text/csv")
 
-# 👇 This runs the app when deployed directly on Streamlit Cloud
+# ------------------------------
+# Export + Reset
+# ------------------------------
+def export_and_reset(df):
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button("📥 Download CSV", csv, "filtered_stats.csv", "text/csv")
+
+    st.subheader("⚠️ Reset All Stats")
+    with st.expander("Danger Zone", expanded=False):
+        st.warning("This will permanently delete all data.")
+        if st.button("🗑️ Delete All"):
+            df = df.iloc[0:0]
+            save_stats(df)
+            st.success("All stats deleted.")
+            st.experimental_rerun()
+
+
+# ------------------------------
+# Main App
+# ------------------------------
+def show():
+    st.title("🥏 Ultimate Stats Tracker")
+    st.caption("Log Ultimate Frisbee game stats, view performance trends, and export your data.")
+
+    stats_df = load_stats()
+    stats_df = log_stat_form(stats_df)
+
+    if stats_df.empty:
+        st.info("No stats to display yet.")
+        return
+
+    filtered_df = show_filtered_table(stats_df)
+    show_trend_chart(filtered_df)
+    export_and_reset(filtered_df)
+
+
+# Run app directly
 if __name__ == "__main__":
     show()
