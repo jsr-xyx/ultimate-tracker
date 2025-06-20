@@ -6,15 +6,15 @@ It logs game-by-game stats and score, calculates plus/minus and pull success, an
 
 ---
 
-## 🎯 Features
+## Features
 
-- ✅ Log stats: Goals, Assists, Drops, Throwaways, Ds, Stall Downs
-- 🧮 Auto-calculates Turnovers, Plus/Minus, Pull Success %
-- 🏆 Track game score (your team vs opponent)
-- 📈 Chart any stat over time
-- 🔍 Filter by player or game
-- 📥 Export data to CSV
-- 🧠 Save/load locally (`ultimate_stats.csv`)
+- Log stats: Goals, Assists, Drops, Throwaways, Ds, Stall Downs
+- Auto-calculates Turnovers, Plus/Minus, Pull Success %
+- Track game score (your team vs opponent)
+- Chart any stat over time
+- Filter by player or game
+- Export data to CSV
+- Save/load locally (`ultimate_stats.csv`)
 
 ---
 
@@ -24,9 +24,9 @@ It logs game-by-game stats and score, calculates plus/minus and pull success, an
 
 ---
 
-## 🚀 Live Demo
+## Live Demo
 
-👉 [Launch the tracker on Streamlit Cloud](https://yunxuan-portfolio.streamlit.app)
+[Launch the tracker on Streamlit Cloud](https://yunxuan-portfolio.streamlit.app)
 
 ---
 
